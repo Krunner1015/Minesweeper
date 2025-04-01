@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cctype>
 #include <SFML/Graphics.hpp>
 
 void setText(sf::Text &text, float x, float y) {
@@ -37,7 +38,7 @@ int main() {
     nameText.setStyle(sf::Text::Bold);
     setText(nameText, width/2, height/2 - 45);
 
-    while(welcomeWindow.isOpen()) {
+    while (welcomeWindow.isOpen()) {
         sf::Event event;
         while(welcomeWindow.pollEvent(event)) {
             if(event.type == sf::Event::Closed) {
@@ -45,13 +46,25 @@ int main() {
             }
 
             if(event.type == sf::Event::TextEntered) {
-                if (event.text.unicode < 128 && event.text.unicode >= 32 && name.size() < 10) {
-                    name += event.text.unicode;
+                char typedChar = static_cast<char>(event.text.unicode);
+
+                if (((typedChar >= 'a' && typedChar <= 'z') || (typedChar >= 'A' && typedChar <= 'Z')) && name.size() < 10) {
+                    name += typedChar;
+                    name[0] = std::toupper(name[0]);
+                    if (name.size() > 1) {
+                        for (int i = 1; i < name.size(); i++) {
+                            name[i] = std::tolower(name[i]);
+                        }
+                    }
                 }
             }
             if(event.type == sf::Event::KeyPressed) {
                 if(event.key.code == sf::Keyboard::BackSpace && !name.empty()) {
                     name.pop_back();
+                } else if (event.key.code == sf::Keyboard::Enter && name.size() > 0) {
+                    std::cout << "change screen to in game" << std::endl;
+                } else if (event.key.code == sf::Keyboard::Escape) {
+                    welcomeWindow.close();
                 }
             }
         }
@@ -65,6 +78,13 @@ int main() {
         welcomeWindow.draw(nameText);
 
         welcomeWindow.display();
+    }
+    if (name.size() > 0) {
+        sf::RenderWindow gameWindow(sf::VideoMode(width, height), "Welcome!", sf::Style::Close);
+
+        while (gameWindow.isOpen()) {
+            return 0;
+        }
     }
     return 0;
 }
