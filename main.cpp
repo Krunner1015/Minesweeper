@@ -10,9 +10,12 @@ void setText(sf::Text &text, float x, float y) {
 }
 
 int main() {
+    sf::Clock clock;
     bool ingame = false;
     bool leaderBoard = false;
     std::string name = "";
+    bool cursor = false;
+    int cursorpos = 0;
     int colCount = 25;
     int rowCount = 16;
     int mineCount = 50;
@@ -53,6 +56,7 @@ int main() {
 
                 if (((typedChar >= 'a' && typedChar <= 'z') || (typedChar >= 'A' && typedChar <= 'Z')) && name.size() < 10) {
                     name += typedChar;
+                    cursorpos++;
                     name[0] = std::toupper(name[0]);
                     if (name.size() > 1) {
                         for (int i = 1; i < name.size(); i++) {
@@ -64,6 +68,13 @@ int main() {
             if(event.type == sf::Event::KeyPressed) {
                 if(event.key.code == sf::Keyboard::BackSpace && !name.empty()) {
                     name.pop_back();
+                    cursorpos--;
+                } else if (event.key.code == sf::Keyboard::Delete && name.size() > cursorpos) {
+                    name.erase(name.begin() + cursorpos);
+                } else if (event.key.code == sf::Keyboard::Right && cursorpos < name.size()) {
+                    cursorpos++;
+                } else if (event.key.code == sf::Keyboard::Left && cursorpos > 0) {
+                    cursorpos--;
                 } else if (event.key.code == sf::Keyboard::Enter && name.size() > 0) {
                     std::cout << "Change screen to in game" << std::endl;
                     ingame = true;
@@ -77,9 +88,20 @@ int main() {
 
         welcomeWindow.clear(sf::Color::Blue);
 
+        if (clock.getElapsedTime() >= sf::milliseconds(500)) {
+            clock.restart();
+            cursor = !cursor;
+            if (cursor) {
+                std:: string cursorname = name;
+                cursorname.insert(cursorpos, "|");
+                nameText.setString(cursorname);
+            } else {
+                nameText.setString(name);
+            }
+        }
+
         welcomeWindow.draw(welcome);
         welcomeWindow.draw(enterName);
-        nameText.setString(name + "|");
         setText(nameText, width/2, height/2 - 45);
         welcomeWindow.draw(nameText);
 
@@ -87,6 +109,10 @@ int main() {
     }
     while (ingame) {
         sf::RenderWindow gameWindow(sf::VideoMode(width, height), "Minesweeper", sf::Style::Close);
+        sf::Cursor hand;
+        if (hand.loadFromSystem(sf::Cursor::Hand)) {
+            welcomeWindow.setMouseCursor(hand);
+        }
 
         while (gameWindow.isOpen()) {
             sf::Event event;
