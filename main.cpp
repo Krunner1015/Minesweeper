@@ -10,6 +10,7 @@ void setText(sf::Text &text, float x, float y) {
 }
 
 int main() {
+    bool ingame = false;
     std::string name = "";
     int colCount = 25;
     int rowCount = 16;
@@ -63,6 +64,8 @@ int main() {
                     name.pop_back();
                 } else if (event.key.code == sf::Keyboard::Enter && name.size() > 0) {
                     std::cout << "change screen to in game" << std::endl;
+                    ingame = true;
+                    welcomeWindow.close();
                 } else if (event.key.code == sf::Keyboard::Escape) {
                     welcomeWindow.close();
                 }
@@ -79,11 +82,18 @@ int main() {
 
         welcomeWindow.display();
     }
-    if (name.size() > 0) {
-        sf::RenderWindow gameWindow(sf::VideoMode(width, height), "Welcome!", sf::Style::Close);
+    if (ingame) {
+        sf::RenderWindow gameWindow(sf::VideoMode(width, height), "Minesweeper", sf::Style::Close);
 
         while (gameWindow.isOpen()) {
-            return 0;
+            sf::Event event;
+            while(gameWindow.pollEvent(event)) {
+                if(event.type == sf::Event::Closed) {
+                    gameWindow.close();
+                }
+                gameWindow.clear(sf::Color::White);
+                gameWindow.display();
+            }
         }
     }
     return 0;
