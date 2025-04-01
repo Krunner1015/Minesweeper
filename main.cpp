@@ -11,6 +11,7 @@ void setText(sf::Text &text, float x, float y) {
 
 int main() {
     bool ingame = false;
+    bool leaderBoard = false;
     std::string name = "";
     int colCount = 25;
     int rowCount = 16;
@@ -43,6 +44,7 @@ int main() {
         sf::Event event;
         while(welcomeWindow.pollEvent(event)) {
             if(event.type == sf::Event::Closed) {
+                ingame = false;
                 welcomeWindow.close();
             }
 
@@ -63,10 +65,11 @@ int main() {
                 if(event.key.code == sf::Keyboard::BackSpace && !name.empty()) {
                     name.pop_back();
                 } else if (event.key.code == sf::Keyboard::Enter && name.size() > 0) {
-                    std::cout << "change screen to in game" << std::endl;
+                    std::cout << "Change screen to in game" << std::endl;
                     ingame = true;
                     welcomeWindow.close();
                 } else if (event.key.code == sf::Keyboard::Escape) {
+                    ingame = false;
                     welcomeWindow.close();
                 }
             }
@@ -82,17 +85,46 @@ int main() {
 
         welcomeWindow.display();
     }
-    if (ingame) {
+    while (ingame) {
         sf::RenderWindow gameWindow(sf::VideoMode(width, height), "Minesweeper", sf::Style::Close);
 
         while (gameWindow.isOpen()) {
             sf::Event event;
             while(gameWindow.pollEvent(event)) {
                 if(event.type == sf::Event::Closed) {
+                    ingame = false;
                     gameWindow.close();
+                }
+                if(event.type == sf::Event::KeyPressed) {
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        std::cout << "Open leader board screen" << std::endl;
+                        leaderBoard = true;
+                    }
                 }
                 gameWindow.clear(sf::Color::White);
                 gameWindow.display();
+            }
+
+            if (leaderBoard) {
+                sf::RenderWindow leaderBoardWindow(sf::VideoMode(colCount*16, rowCount*16 + 50), "Leader Board", sf::Style::Close);
+
+                while (leaderBoardWindow.isOpen()) {
+                    while(leaderBoardWindow.pollEvent(event)) {
+                        if(event.type == sf::Event::Closed) {
+                            leaderBoard = false;
+                            leaderBoardWindow.close();
+                        }
+                        if(event.type == sf::Event::KeyPressed) {
+                            if (event.key.code == sf::Keyboard::Escape) {
+                                std::cout << "Closing leader board screen" << std::endl;
+                                leaderBoard = false;
+                                leaderBoardWindow.close();
+                            }
+                        }
+                        leaderBoardWindow.clear(sf::Color::Blue);
+                        leaderBoardWindow.display();
+                    }
+                }
             }
         }
     }
