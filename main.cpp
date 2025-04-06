@@ -22,7 +22,7 @@ int main() {
     int width = colCount*32;
     int height = rowCount*32 + 100;
     sf::Font font;
-    if (!font.loadFromFile("font.ttf")) {
+    if (!font.loadFromFile("files/font.ttf")) {
         std::cout << "Error loading font" << std::endl;
         return -1;
     }
