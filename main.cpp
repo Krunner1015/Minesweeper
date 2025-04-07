@@ -19,7 +19,7 @@ int main() {
     int cursorpos = 0;
     std::ifstream config("files/config.cfg");
     if (!config.is_open()) {
-        std::cout << "Error opening file" << std::endl;
+        std::cout << "Error opening config" << std::endl;
         return -1;
     }
     int colCount, rowCount, mineCount;
@@ -34,19 +34,19 @@ int main() {
     }
     std::ifstream leaderfile("files/leaderboard.txt");
     if (!leaderfile.is_open()) {
-        std::cout << "Error opening file" << std::endl;
+        std::cout << "Error opening leaderboard" << std::endl;
         return -1;
     }
     std::string leadersls;
     std::string line;
-    int i = 1;
-    while (getline(leaderfile, line) && i < 6) {
+    int linenum = 1;
+    while (getline(leaderfile, line) && linenum < 6) {
         int commapos = line.find(',');
         if (commapos != std::string::npos) {
             line[commapos] = '\t';
         }
-        leadersls += std::to_string(i) + ".\t" + line + "\n\n";
-        i++;
+        leadersls += std::to_string(linenum) + ".\t" + line + "\n\n";
+        linenum++;
     }
 
     sf::RenderWindow welcomeWindow(sf::VideoMode(width, height), "Welcome!", sf::Style::Close);
@@ -75,6 +75,46 @@ int main() {
     leaders.setFillColor(sf::Color::White);
     leaders.setStyle(sf::Text::Bold);
     setText(leaders, (colCount*16)/2, (rowCount*16 + 50)/2 + 20);
+
+    sf::Texture happytex;
+    if (!happytex.loadFromFile("files/images/face_happy.png")) {
+        std::cout << "Error loading face_happy" << std::endl;
+    }
+    sf::Sprite happy;
+    happy.setTexture(happytex);
+    happy.setPosition(sf::Vector2f((colCount/2 *32)-32, 32*(rowCount+0.5)));
+
+    sf::Texture debugtex;
+    if (!debugtex.loadFromFile("files/images/debug.png")) {
+        std::cout << "Error loading debug" << std::endl;
+    }
+    sf::Sprite debug;
+    debug.setTexture(debugtex);
+    debug.setPosition(sf::Vector2f((colCount *32)-304, 32*(rowCount+0.5)));
+
+    sf::Texture playtex;
+    if (!playtex.loadFromFile("files/images/play.png")) {
+        std::cout << "Error loading play" << std::endl;
+    }
+    sf::Sprite play;
+    play.setTexture(playtex);
+    play.setPosition(sf::Vector2f((colCount *32)-240, 32*(rowCount+0.5)));
+
+    sf::Texture pausetex;
+    if (!pausetex.loadFromFile("files/images/pause.png")) {
+        std::cout << "Error loading pause" << std::endl;
+    }
+    sf::Sprite pause;
+    pause.setTexture(pausetex);
+    pause.setPosition(sf::Vector2f((colCount *32)-240, 32*(rowCount+0.5)));
+
+    sf::Texture leadertex;
+    if (!leadertex.loadFromFile("files/images/leaderboard.png")) {
+        std::cout << "Error loading leaderboard" << std::endl;
+    }
+    sf::Sprite leadersprite;
+    leadersprite.setTexture(leadertex);
+    leadersprite.setPosition(sf::Vector2f((colCount *32)-176, 32*(rowCount+0.5)));
 
     while (welcomeWindow.isOpen()) {
         sf::Event event;
@@ -163,6 +203,10 @@ int main() {
             }
 
             gameWindow.clear(sf::Color::White);
+            gameWindow.draw(happy);
+            gameWindow.draw(debug);
+            gameWindow.draw(play);
+            gameWindow.draw(leadersprite);
             gameWindow.display();
 
             if (leaderBoard) {
