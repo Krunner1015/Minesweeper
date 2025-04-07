@@ -34,14 +34,15 @@ int main() {
     }
     std::string leadersls;
     std::string line;
-    while (getline(leaderfile, line)) {
+    int i = 1;
+    while (getline(leaderfile, line) && i < 6) {
         int commapos = line.find(',');
         if (commapos != std::string::npos) {
             line[commapos] = '\t';
         }
-        leadersls += line + "\n\n";
+        leadersls += std::to_string(i) + ".\t" + line + "\n\n";
+        i++;
     }
-    std::cout << leadersls << std::endl;
 
     sf::RenderWindow welcomeWindow(sf::VideoMode(width, height), "Welcome!", sf::Style::Close);
 
