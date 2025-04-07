@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cctype>
 #include <SFML/Graphics.hpp>
 
@@ -26,6 +27,22 @@ int main() {
         std::cout << "Error loading font" << std::endl;
         return -1;
     }
+    std::ifstream leaderfile("files/leaderboard.txt");
+    if (!leaderfile.is_open()) {
+        std::cout << "Error opening file" << std::endl;
+        return -1;
+    }
+    std::string leadersls;
+    std::string line;
+    while (getline(leaderfile, line)) {
+        int commapos = line.find(',');
+        if (commapos != std::string::npos) {
+            line[commapos] = '\t';
+        }
+        leadersls += line + "\n\n";
+    }
+    std::cout << leadersls << std::endl;
+
     sf::RenderWindow welcomeWindow(sf::VideoMode(width, height), "Welcome!", sf::Style::Close);
 
     sf::Text welcome("WELCOME TO MINESWEEPER!", font, 24);
@@ -42,6 +59,16 @@ int main() {
     nameText.setFillColor(sf::Color::White);
     nameText.setStyle(sf::Text::Bold);
     setText(nameText, width/2, height/2 - 45);
+
+    sf::Text leaderboard("LEADERBOARD", font, 20);
+    leaderboard.setFillColor(sf::Color::White);
+    leaderboard.setStyle(sf::Text::Bold | sf::Text::Underlined);
+    setText(leaderboard, (colCount*16)/2, (rowCount*16 + 50)/2 - 120);
+
+    sf::Text leaders(leadersls, font, 18);
+    leaders.setFillColor(sf::Color::White);
+    leaders.setStyle(sf::Text::Bold);
+    setText(leaders, (colCount*16)/2, (rowCount*16 + 50)/2 + 20);
 
     while (welcomeWindow.isOpen()) {
         sf::Event event;
@@ -127,9 +154,10 @@ int main() {
                         leaderBoard = true;
                     }
                 }
-                gameWindow.clear(sf::Color::White);
-                gameWindow.display();
             }
+
+            gameWindow.clear(sf::Color::White);
+            gameWindow.display();
 
             if (leaderBoard) {
                 sf::RenderWindow leaderBoardWindow(sf::VideoMode(colCount*16, rowCount*16 + 50), "Leader Board", sf::Style::Close);
@@ -147,9 +175,14 @@ int main() {
                                 leaderBoardWindow.close();
                             }
                         }
-                        leaderBoardWindow.clear(sf::Color::Blue);
-                        leaderBoardWindow.display();
                     }
+
+                    leaderBoardWindow.clear(sf::Color::Blue);
+
+                    leaderBoardWindow.draw(leaderboard);
+                    leaderBoardWindow.draw(leaders);
+
+                    leaderBoardWindow.display();
                 }
             }
         }
