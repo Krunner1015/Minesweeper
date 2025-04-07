@@ -17,11 +17,16 @@ int main() {
     std::string name = "";
     bool cursor = false;
     int cursorpos = 0;
-    int colCount = 25;
-    int rowCount = 16;
-    int mineCount = 50;
+    std::ifstream config("files/config.cfg");
+    if (!config.is_open()) {
+        std::cout << "Error opening file" << std::endl;
+        return -1;
+    }
+    int colCount, rowCount, mineCount;
+    config >> colCount >> rowCount >> mineCount;
     int width = colCount*32;
     int height = rowCount*32 + 100;
+    int tileCount = colCount * rowCount;
     sf::Font font;
     if (!font.loadFromFile("files/font.ttf")) {
         std::cout << "Error loading font" << std::endl;
@@ -164,13 +169,14 @@ int main() {
                 sf::RenderWindow leaderBoardWindow(sf::VideoMode(colCount*16, rowCount*16 + 50), "Leader Board", sf::Style::Close);
 
                 while (leaderBoardWindow.isOpen()) {
-                    while(leaderBoardWindow.pollEvent(event)) {
-                        if(event.type == sf::Event::Closed) {
+                    sf::Event levent;
+                    while(leaderBoardWindow.pollEvent(levent)) {
+                        if(levent.type == sf::Event::Closed) {
                             leaderBoard = false;
                             leaderBoardWindow.close();
                         }
-                        if(event.type == sf::Event::KeyPressed) {
-                            if (event.key.code == sf::Keyboard::Escape) {
+                        if(levent.type == sf::Event::KeyPressed) {
+                            if (levent.key.code == sf::Keyboard::Escape) {
                                 std::cout << "Closing leader board screen" << std::endl;
                                 leaderBoard = false;
                                 leaderBoardWindow.close();
