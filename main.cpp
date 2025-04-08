@@ -16,6 +16,7 @@ int main() {
     bool leaderBoard = false;
     bool win = false;
     bool lose = false;
+    bool pause = false;
     std::string name = "";
     bool cursor = false;
     int cursorpos = 0;
@@ -122,9 +123,9 @@ int main() {
     if (!pausetex.loadFromFile("files/images/pause.png")) {
         std::cout << "Error loading pause" << std::endl;
     }
-    sf::Sprite pause;
-    pause.setTexture(pausetex);
-    pause.setPosition(sf::Vector2f((colCount *32)-240, 32*(rowCount+0.5)));
+    sf::Sprite pausesprite;
+    pausesprite.setTexture(pausetex);
+    pausesprite.setPosition(sf::Vector2f((colCount *32)-240, 32*(rowCount+0.5)));
 
     sf::Texture leadertex;
     if (!leadertex.loadFromFile("files/images/leaderboard.png")) {
@@ -133,6 +134,20 @@ int main() {
     sf::Sprite leadersprite;
     leadersprite.setTexture(leadertex);
     leadersprite.setPosition(sf::Vector2f((colCount *32)-176, 32*(rowCount+0.5)));
+
+    sf::Texture tilehtex;
+    if (!tilehtex.loadFromFile("files/images/tile_hidden.png")) {
+        std::cout << "Error loading tile_hidden" << std::endl;
+    }
+    sf::Sprite tileh;
+    tileh.setTexture(tilehtex);
+
+    sf::Texture tilertex;
+    if (!tilertex.loadFromFile("files/images/tile_revealed.png")) {
+        std::cout << "Error loading tile_revealed" << std::endl;
+    }
+    sf::Sprite tiler;
+    tiler.setTexture(tilertex);
 
     while (welcomeWindow.isOpen()) {
         sf::Event event;
@@ -214,18 +229,22 @@ int main() {
                 }
                 if(event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Escape) {
-                        std::cout << "Open leader board screen" << std::endl;
-                        leaderBoard = true;
+                        pause = !pause;
                     }
                 }
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        if (event.mouseButton.x < 200) {
-                            win = true;
-                            lose = false;
-                        } else {
-                            win = false;
-                            lose = true;
+                        if ((event.mouseButton.x < colCount*32 - 240 && event.mouseButton.x > colCount*32 - 304) &&
+                            (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
+                            win = !win;
+                        } else if ((event.mouseButton.x < colCount*32 - 176 && event.mouseButton.x > colCount*32 - 240) &&
+                                (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
+                            pause = !pause;
+                        } else if ((event.mouseButton.x < colCount*32 - 112 && event.mouseButton.x > colCount*32 - 176) &&
+                                        (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
+                            std::cout << "Open leader board screen" << std::endl;
+                            leaderBoard = true;
+                            pause = true;
                         }
                     }
                 }
@@ -239,8 +258,24 @@ int main() {
             } else if (lose) {
                 gameWindow.draw(loseface);
             }
+            if (!pause) {
+                gameWindow.draw(play);
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        tileh.setPosition(col*32, row*32);
+                        gameWindow.draw(tileh);
+                    }
+                }
+            } else if (pause) {
+                gameWindow.draw(pausesprite);
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        tiler.setPosition(col*32, row*32);
+                        gameWindow.draw(tiler);
+                    }
+                }
+            }
             gameWindow.draw(debug);
-            gameWindow.draw(play);
             gameWindow.draw(leadersprite);
             gameWindow.display();
 
@@ -252,12 +287,14 @@ int main() {
                     while(leaderBoardWindow.pollEvent(levent)) {
                         if(levent.type == sf::Event::Closed) {
                             leaderBoard = false;
+                            pause = false;
                             leaderBoardWindow.close();
                         }
                         if(levent.type == sf::Event::KeyPressed) {
                             if (levent.key.code == sf::Keyboard::Escape) {
                                 std::cout << "Closing leader board screen" << std::endl;
                                 leaderBoard = false;
+                                pause = false;
                                 leaderBoardWindow.close();
                             }
                         }
