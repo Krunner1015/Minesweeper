@@ -14,6 +14,8 @@ int main() {
     sf::Clock clock;
     bool ingame = false;
     bool leaderBoard = false;
+    bool win = false;
+    bool lose = false;
     std::string name = "";
     bool cursor = false;
     int cursorpos = 0;
@@ -83,6 +85,22 @@ int main() {
     sf::Sprite happy;
     happy.setTexture(happytex);
     happy.setPosition(sf::Vector2f((colCount/2 *32)-32, 32*(rowCount+0.5)));
+
+    sf::Texture wintex;
+    if (!wintex.loadFromFile("files/images/face_win.png")) {
+        std::cout << "Error loading face_win" << std::endl;
+    }
+    sf::Sprite winface;
+    winface.setTexture(wintex);
+    winface.setPosition(sf::Vector2f((colCount/2 *32)-32, 32*(rowCount+0.5)));
+
+    sf::Texture losetex;
+    if (!losetex.loadFromFile("files/images/face_lose.png")) {
+        std::cout << "Error loading face_lose" << std::endl;
+    }
+    sf::Sprite loseface;
+    loseface.setTexture(losetex);
+    loseface.setPosition(sf::Vector2f((colCount/2 *32)-32, 32*(rowCount+0.5)));
 
     sf::Texture debugtex;
     if (!debugtex.loadFromFile("files/images/debug.png")) {
@@ -165,7 +183,7 @@ int main() {
             clock.restart();
             cursor = !cursor;
             if (cursor) {
-                std:: string cursorname = name;
+                std::string cursorname = name;
                 cursorname.insert(cursorpos, "|");
                 nameText.setString(cursorname);
             } else {
@@ -200,10 +218,27 @@ int main() {
                         leaderBoard = true;
                     }
                 }
+                if (event.type == sf::Event::MouseButtonPressed) {
+                    if (event.mouseButton.button == sf::Mouse::Left) {
+                        if (event.mouseButton.x < 200) {
+                            win = true;
+                            lose = false;
+                        } else {
+                            win = false;
+                            lose = true;
+                        }
+                    }
+                }
             }
 
             gameWindow.clear(sf::Color::White);
-            gameWindow.draw(happy);
+            if (!lose && !win) {
+                gameWindow.draw(happy);
+            } else if (win) {
+                gameWindow.draw(winface);
+            } else if (lose) {
+                gameWindow.draw(loseface);
+            }
             gameWindow.draw(debug);
             gameWindow.draw(play);
             gameWindow.draw(leadersprite);
