@@ -253,6 +253,7 @@ int main() {
                         if ((event.mouseButton.x < colCount*32 - 240 && event.mouseButton.x > colCount*32 - 304) &&
                             (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
                             win = !win;
+                            flags--;
                         } else if ((event.mouseButton.x < colCount*32 - 176 && event.mouseButton.x > colCount*32 - 240) &&
                                 (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
                             pause = !pause;
@@ -275,6 +276,14 @@ int main() {
             drawDigit(gameWindow, digits, mins%10, (colCount*32)-76, 32*(rowCount+0.5) + 16); //ones minutes
             drawDigit(gameWindow, digits, seconds/10, (colCount*32)-54, 32*(rowCount+0.5) + 16); //tens seconds
             drawDigit(gameWindow, digits, seconds%10, (colCount*32)-33, 32*(rowCount+0.5) + 16); //ones seconds
+
+            //flag counter
+            drawDigit(gameWindow, digits, abs(flags)/100 %10, 33, 32*(rowCount+0.5) + 16);
+            drawDigit(gameWindow, digits, abs(flags)/10 %10, 54, 32*(rowCount+0.5) + 16);
+            drawDigit(gameWindow, digits, abs(flags)%10, 75, 32*(rowCount+0.5) + 16);
+            if (flags < 0) {
+                drawDigit(gameWindow, digits, 10, 12, 32*(rowCount+0.5) + 16);
+            }
 
             if (!lose && !win) {
                 gameWindow.draw(happy);
