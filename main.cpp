@@ -166,6 +166,76 @@ int main() {
     sf::Sprite digits;
     digits.setTexture(digittex);
 
+    sf::Texture minetex;
+    if (!minetex.loadFromFile("files/images/mine.png")) {
+        std::cout << "Error loading mine" << std::endl;
+    }
+    sf::Sprite mine;
+    mine.setTexture(minetex);
+
+    sf::Texture flagtex;
+    if (!flagtex.loadFromFile("files/images/flag.png")) {
+        std::cout << "Error loading flag" << std::endl;
+    }
+    sf::Sprite flag;
+    flag.setTexture(flagtex);
+
+    sf::Texture onetex;
+    if (!onetex.loadFromFile("files/images/number_1.png")) {
+        std::cout << "Error loading number 1" << std::endl;
+    }
+    sf::Sprite one;
+    one.setTexture(onetex);
+
+    sf::Texture twotex;
+    if (!twotex.loadFromFile("files/images/number_2.png")) {
+        std::cout << "Error loading number 2" << std::endl;
+    }
+    sf::Sprite two;
+    two.setTexture(twotex);
+
+    sf::Texture threetex;
+    if (!threetex.loadFromFile("files/images/number_3.png")) {
+        std::cout << "Error loading number 3" << std::endl;
+    }
+    sf::Sprite three;
+    three.setTexture(threetex);
+
+    sf::Texture fourtex;
+    if (!fourtex.loadFromFile("files/images/number_4.png")) {
+        std::cout << "Error loading number 4" << std::endl;
+    }
+    sf::Sprite four;
+    four.setTexture(fourtex);
+
+    sf::Texture fivetex;
+    if (!fivetex.loadFromFile("files/images/number_5.png")) {
+        std::cout << "Error loading number 5" << std::endl;
+    }
+    sf::Sprite five;
+    five.setTexture(fivetex);
+
+    sf::Texture sixtex;
+    if (!sixtex.loadFromFile("files/images/number_6.png")) {
+        std::cout << "Error loading number 6" << std::endl;
+    }
+    sf::Sprite six;
+    six.setTexture(sixtex);
+
+    sf::Texture seventex;
+    if (!seventex.loadFromFile("files/images/number_7.png")) {
+        std::cout << "Error loading number 7" << std::endl;
+    }
+    sf::Sprite seven;
+    seven.setTexture(seventex);
+
+    sf::Texture eightex;
+    if (!eightex.loadFromFile("files/images/number_8.png")) {
+        std::cout << "Error loading number 8" << std::endl;
+    }
+    sf::Sprite eight;
+    eight.setTexture(eightex);
+
     while (welcomeWindow.isOpen()) {
         sf::Event event;
         while(welcomeWindow.pollEvent(event)) {
