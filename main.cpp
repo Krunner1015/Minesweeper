@@ -25,6 +25,7 @@ int main() {
     bool win = false;
     bool lose = false;
     bool pause = false;
+    bool timestart = false;
     std::string name = "";
     bool cursor = false;
     int cursorpos = 0;
@@ -238,7 +239,7 @@ int main() {
 
         while (gameWindow.isOpen()) {
             sf::Event event;
-            while(gameWindow.pollEvent(event)) {
+            while (gameWindow.pollEvent(event)) {
                 if(event.type == sf::Event::Closed) {
                     ingame = false;
                     gameWindow.close();
@@ -250,7 +251,13 @@ int main() {
                 }
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        if ((event.mouseButton.x < colCount*32 - 240 && event.mouseButton.x > colCount*32 - 304) &&
+                        if ((event.mouseButton.x < width && event.mouseButton.x > 0) &&
+                                (event.mouseButton.y < height && event.mouseButton.y > 0)) {
+                            if (!timestart) {
+                                timestart = true;
+                                clock.restart();
+                            }
+                        } else if ((event.mouseButton.x < colCount*32 - 240 && event.mouseButton.x > colCount*32 - 304) &&
                             (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
                             win = !win;
                             flags--;
@@ -268,7 +275,31 @@ int main() {
             }
 
             gameWindow.clear(sf::Color::White);
-            sf::Time gameTime = clock.getElapsedTime() - pausedDuration;
+
+            if (!timestart) {
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        tileh.setPosition(col*32, row*32);
+                        gameWindow.draw(tileh);
+                    }
+                }
+            }
+
+            if (!pause) {
+                pauseStartTime = clock.getElapsedTime();
+                gameWindow.draw(pausesprite);
+            } else if (pause) {
+                pausedDuration = clock.getElapsedTime() - pauseStartTime;
+                gameWindow.draw(play);
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        tiler.setPosition(col*32, row*32);
+                        gameWindow.draw(tiler);
+                    }
+                }
+            }
+
+            sf::Time gameTime = timestart ? clock.getElapsedTime() - pausedDuration : sf::Time::Zero;
             int time = static_cast<int>(gameTime.asSeconds());
             int mins = time / 60;
             int seconds = time % 60;
@@ -291,25 +322,6 @@ int main() {
                 gameWindow.draw(winface);
             } else if (lose) {
                 gameWindow.draw(loseface);
-            }
-            if (!pause) {
-                pauseStartTime = clock.getElapsedTime();
-                gameWindow.draw(pausesprite);
-                for (int row = 0; row < rowCount; row++) {
-                    for (int col = 0; col < colCount; col++) {
-                        tileh.setPosition(col*32, row*32);
-                        gameWindow.draw(tileh);
-                    }
-                }
-            } else if (pause) {
-                pausedDuration = clock.getElapsedTime() - pauseStartTime;
-                gameWindow.draw(play);
-                for (int row = 0; row < rowCount; row++) {
-                    for (int col = 0; col < colCount; col++) {
-                        tiler.setPosition(col*32, row*32);
-                        gameWindow.draw(tiler);
-                    }
-                }
             }
             gameWindow.draw(debug);
             gameWindow.draw(leadersprite);
