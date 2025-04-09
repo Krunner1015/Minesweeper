@@ -10,8 +10,16 @@ void setText(sf::Text &text, float x, float y) {
     text.setPosition(sf::Vector2f(x, y));
 }
 
+void drawDigit(sf::RenderWindow &window, sf::Sprite &digits, int digit, float x, float y) {
+    digits.setTextureRect(sf::IntRect(digit*21, 0, 21, 32));
+    digits.setPosition(x, y);
+    window.draw(digits);
+}
+
 int main() {
     sf::Clock clock;
+    sf::Time pausedDuration = sf::Time::Zero;
+    sf::Time pauseStartTime;
     bool ingame = false;
     bool leaderBoard = false;
     bool win = false;
@@ -30,6 +38,7 @@ int main() {
     int width = colCount*32;
     int height = rowCount*32 + 100;
     int tileCount = colCount * rowCount;
+    int flags = mineCount;
     sf::Font font;
     if (!font.loadFromFile("files/font.ttf")) {
         std::cout << "Error loading font" << std::endl;
@@ -149,6 +158,13 @@ int main() {
     sf::Sprite tiler;
     tiler.setTexture(tilertex);
 
+    sf::Texture digittex;
+    if (!digittex.loadFromFile("files/images/digits.png")) {
+        std::cout << "Error loading digits" << std::endl;
+    }
+    sf::Sprite digits;
+    digits.setTexture(digittex);
+
     while (welcomeWindow.isOpen()) {
         sf::Event event;
         while(welcomeWindow.pollEvent(event)) {
@@ -251,6 +267,15 @@ int main() {
             }
 
             gameWindow.clear(sf::Color::White);
+            sf::Time gameTime = clock.getElapsedTime() - pausedDuration;
+            int time = static_cast<int>(gameTime.asSeconds());
+            int mins = time / 60;
+            int seconds = time % 60;
+            drawDigit(gameWindow, digits, mins/10, (colCount*32)-97, 32*(rowCount+0.5) + 16); //tens minutes
+            drawDigit(gameWindow, digits, mins%10, (colCount*32)-76, 32*(rowCount+0.5) + 16); //ones minutes
+            drawDigit(gameWindow, digits, seconds/10, (colCount*32)-54, 32*(rowCount+0.5) + 16); //tens seconds
+            drawDigit(gameWindow, digits, seconds%10, (colCount*32)-33, 32*(rowCount+0.5) + 16); //ones seconds
+
             if (!lose && !win) {
                 gameWindow.draw(happy);
             } else if (win) {
@@ -259,7 +284,8 @@ int main() {
                 gameWindow.draw(loseface);
             }
             if (!pause) {
-                gameWindow.draw(play);
+                pauseStartTime = clock.getElapsedTime();
+                gameWindow.draw(pausesprite);
                 for (int row = 0; row < rowCount; row++) {
                     for (int col = 0; col < colCount; col++) {
                         tileh.setPosition(col*32, row*32);
@@ -267,7 +293,8 @@ int main() {
                     }
                 }
             } else if (pause) {
-                gameWindow.draw(pausesprite);
+                pausedDuration = clock.getElapsedTime() - pauseStartTime;
+                gameWindow.draw(play);
                 for (int row = 0; row < rowCount; row++) {
                     for (int col = 0; col < colCount; col++) {
                         tiler.setPosition(col*32, row*32);
