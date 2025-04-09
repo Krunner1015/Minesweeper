@@ -1,7 +1,80 @@
 #include <iostream>
 #include <fstream>
 #include <cctype>
+#include <vector>
+#include <random>
 #include <SFML/Graphics.hpp>
+
+class Tile {
+private:
+    bool ismine = false;
+    bool isflag = false;
+    bool isrevealed = false;
+    int adjacentMines = 0;
+    int row, col;
+    sf::Sprite sprite;
+    std::vector<Tile*> adjacentTiles;
+public:
+    Tile(int r, int c) : row(r), col(c) {}
+
+    void settexture(sf::Texture *texture) {
+        sprite.setTexture(*texture);
+    }
+
+    void setPos(float x, float y) {
+        sprite.setPosition(x, y);
+    }
+
+    void setMine(bool val) {
+        ismine = val;
+    }
+
+    void toggleFlag() {
+        if (!isrevealed) {
+            isflag = !isflag;
+        }
+    }
+
+    void reveal() {
+        if (!isflag && !isrevealed) {
+            isrevealed = true;
+
+            if (adjacentMines == 0) {
+                for (Tile* tile : adjacentTiles) {
+                    tile->reveal();
+                }
+            }
+        }
+    }
+
+    bool contains(float x, float y) {
+        return sprite.getGlobalBounds().contains(x, y);
+    }
+
+    void setadjacentMines(int num) {
+        adjacentMines = num;
+    }
+
+    void addNeighbor(Tile* tile) {
+        adjacentTiles.push_back(tile);
+    }
+
+    int countAdjacentMines() {
+        int count = 0;
+        for (Tile* tile : adjacentTiles) {
+            if (tile->getisMine()) count++;
+        }
+        adjacentMines = count;
+        return count;
+    }
+
+    bool getisMine() {return ismine;}
+    bool getisflag() {return isflag;}
+    bool getisrevealed() {return isrevealed;}
+    bool getisFlag() {return isflag;}
+    int getadjacentMines() {return adjacentMines;}
+    sf::Sprite getSprite() {return sprite;}
+};
 
 void setText(sf::Text &text, float x, float y) {
     sf::FloatRect textRect = text.getLocalBounds();
@@ -14,6 +87,36 @@ void drawDigit(sf::RenderWindow &window, sf::Sprite &digits, int digit, float x,
     digits.setTextureRect(sf::IntRect(digit*21, 0, 21, 32));
     digits.setPosition(x, y);
     window.draw(digits);
+}
+
+void addMines(std::vector<std::vector<Tile>> &board, int safeRow, int safeCol, int rowCount, int colCount, int mineCount) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> rowDist(0, rowCount-1);
+    std::uniform_int_distribution<int> colDist(0, colCount-1);
+
+    for (int i = 0; i < mineCount; i++) {
+        int randomRow = rowDist(gen);
+        int randomCol = colDist(gen);
+        if (!board[randomRow][randomCol].getisMine()) {
+            board[randomRow][randomCol].setMine(true);
+        }
+    }
+
+    for (int row = 0; row < rowCount; row++) {
+        for (int col = 0; col < colCount; col++) {
+            for (int rowchange = -1; rowchange < 1; rowchange++) {
+                for (int colchange = -1; colchange < 1; colchange++) {
+                    if (rowchange == 0 && colchange == 0) continue;
+                    int newRow = row + rowchange;
+                    int newCol = col + colchange;
+                    if (newRow >= 0 && newRow < rowCount && newCol >= 0 && newCol < colCount) {
+                        board[row][col].addNeighbor(&board[newRow][newCol]);
+                    }
+                }
+            }
+        }
+    }
 }
 
 int main() {
@@ -307,6 +410,18 @@ int main() {
             welcomeWindow.setMouseCursor(hand);
         }
 
+        std::vector<std::vector<Tile>> board;
+        for (int row = 0; row < height; row++) {
+            std::vector<Tile> tileRow;
+            for (int col = 0; col < width; col++) {
+                Tile tile(row, col);
+                tile.setPos(col*32, row*32);
+                tile.settexture(&tilehtex);
+                tileRow.push_back(tile);
+            }
+            board.push_back(tileRow);
+        }
+
         while (gameWindow.isOpen()) {
             sf::Event event;
             while (gameWindow.pollEvent(event)) {
@@ -321,21 +436,26 @@ int main() {
                 }
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        if ((event.mouseButton.x < width && event.mouseButton.x > 0) &&
-                                (event.mouseButton.y < height && event.mouseButton.y > 0)) {
+                        int x = event.mouseButton.x;
+                        int y = event.mouseButton.y;
+                        int row = x/32;
+                        int col = y/32;
+
+                        if (y < rowCount*32) {
                             if (!timestart) {
                                 timestart = true;
                                 clock.restart();
+                                addMines(board, row, col, rowCount, colCount, mineCount);
                             }
-                        } else if ((event.mouseButton.x < colCount*32 - 240 && event.mouseButton.x > colCount*32 - 304) &&
-                            (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
+                        // debug button
+                        } else if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             win = !win;
                             flags--;
-                        } else if ((event.mouseButton.x < colCount*32 - 176 && event.mouseButton.x > colCount*32 - 240) &&
-                                (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
+                        // pause button
+                        } else if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             pause = !pause;
-                        } else if ((event.mouseButton.x < colCount*32 - 112 && event.mouseButton.x > colCount*32 - 176) &&
-                                        (event.mouseButton.y < 32*(rowCount+0.5) + 64 && event.mouseButton.y > 32*(rowCount+0.5))) {
+                        // leaderboard button
+                        } else if ((x < colCount*32 - 112 && x > colCount*32 - 176) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             std::cout << "Open leader board screen" << std::endl;
                             leaderBoard = true;
                             pause = true;
