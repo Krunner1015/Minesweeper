@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cctype>
 #include <vector>
 #include <random>
@@ -172,6 +173,7 @@ int main() {
     sf::Clock clock;
     sf::Time pausedDuration = sf::Time::Zero;
     sf::Time pauseStartTime;
+    sf::Time finalTime;
     bool ingame = false;
     bool leaderBoard = false;
     bool win = false;
@@ -180,6 +182,7 @@ int main() {
     bool timestart = false;
     bool debugmode = false;
     std::string name = "";
+    int playertime;
     bool cursor = false;
     int cursorpos = 0;
     std::ifstream config("files/config.cfg");
@@ -192,7 +195,6 @@ int main() {
     int width = colCount*32;
     int height = rowCount*32 + 100;
     int tileCount = colCount * rowCount;
-    std::cout << tileCount << std::endl;
     int flags = mineCount;
     sf::Font font;
     if (!font.loadFromFile("files/font.ttf")) {
@@ -493,6 +495,7 @@ int main() {
                                 int brokentiles = 0;
                                 board[row][col].reveal();
                                 if (board[row][col].getisMine()) {
+                                    finalTime = clock.getElapsedTime() - pausedDuration;
                                     lose = true;
                                     win = false;
                                     debugmode = true;
@@ -504,10 +507,43 @@ int main() {
                                             }
                                         }
                                     }
-                                    std::cout << brokentiles << std::endl;
                                     if (brokentiles == tileCount - mineCount) {
-                                        std::cout << tileCount - mineCount << std::endl;
-                                        pausedDuration = clock.getElapsedTime() - pauseStartTime;
+                                        finalTime = clock.getElapsedTime() - pausedDuration;
+                                        playertime = finalTime.asSeconds();
+                                        std::cout << playertime << std::endl;
+                                        linenum = 1;
+                                        leadersls.clear();
+                                        leaderfile.clear();
+                                        leaderfile.seekg(0, std::ios::beg);
+                                        bool nameAdded = false;
+
+                                        while (getline(leaderfile, line) && linenum < 6) {
+                                            int commapos = line.find(',');
+                                            if (commapos != std::string::npos) {
+                                                std::string timePart = line.substr(0, commapos);
+                                                line[commapos] = '\t';
+
+                                                int colonPos = line.find(':');
+                                                if (colonPos != std::string::npos) {
+                                                    int mins = std::stoi(timePart.substr(0, colonPos));
+                                                    int secs = std::stoi(timePart.substr(colonPos + 1));
+                                                    int time = mins*60 + secs;
+                                                    if (playertime < time && !nameAdded) {
+                                                        std::cout << "Your time is better than " << line.substr(commapos + 2) << std::endl;
+                                                        leadersls += std::to_string(linenum) + ".\t";
+                                                        leadersls += std::to_string(playertime/60 /10) + std::to_string(playertime/60 %10) + ":";
+                                                        leadersls += std::to_string(playertime%60 /10) + std::to_string(playertime%60 %10) + "\t ";
+                                                        leadersls += name + "*\n\n";
+                                                        linenum++;
+                                                        nameAdded = true;
+                                                    }
+                                                }
+                                            }
+                                            leadersls += std::to_string(linenum) + ".\t" + line + "\n\n";
+                                            linenum++;
+                                        }
+                                        leaders.setString(leadersls);
+                                        setText(leaders, (colCount*16)/2, (rowCount*16 + 50)/2 + 20);
                                         win = true;
                                         lose = false;
                                         leaderBoard = true;
@@ -522,19 +558,21 @@ int main() {
                                     }
                                 }
                             }
+                        }
+                        if (!win && !lose) {
+                            // debug button
+                            if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                                //show mines
+                                debugmode = !debugmode;
 
-                        // debug button
-                        } else if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
-                            //show mines
-                            debugmode = !debugmode;
-
-                        // pause button
-                        } else if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
-                            pause = !pause;
-                            debugmode = false;
-
+                                // pause button
+                            } else if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                                pause = !pause;
+                                debugmode = false;
+                            }
+                        }
                         // leaderboard button
-                        } else if ((x < colCount*32 - 112 && x > colCount*32 - 176) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                        if ((x < colCount*32 - 112 && x > colCount*32 - 176) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             std::cout << "Open leader board screen" << std::endl;
                             leaderBoard = true;
                             pause = true;
@@ -644,7 +682,16 @@ int main() {
                 }
             }
 
-            sf::Time gameTime = timestart ? clock.getElapsedTime() - pausedDuration : sf::Time::Zero;
+            sf::Time gameTime;
+
+            if (win || lose) {
+                gameTime = finalTime;
+            } else if (timestart) {
+                gameTime = clock.getElapsedTime() - pausedDuration;
+            } else {
+                gameTime = sf::Time::Zero;
+            }
+
             int time = static_cast<int>(gameTime.asSeconds());
             int mins = time / 60;
             int seconds = time % 60;
