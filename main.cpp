@@ -133,10 +133,16 @@ void addMines(std::vector<std::vector<Tile>> &board, int safeRow, int safeCol, i
     std::uniform_int_distribution<int> colDist(0, colCount-1);
 
     for (int i = 0; i < mineCount; i++) {
-        int randomRow = rowDist(gen);
-        int randomCol = colDist(gen);
-        if (excluded.count({randomRow, randomCol}) == 0 && !board[randomRow][randomCol].getisMine() && !(randomRow == safeRow && randomCol == safeCol)) {
-            board[randomRow][randomCol].setMine(true);
+        int randomRow, randomCol;
+        bool validPos = false;
+
+        while (!validPos) {
+            randomRow = rowDist(gen);
+            randomCol = colDist(gen);
+            if (excluded.count({randomRow, randomCol}) == 0 && !board[randomRow][randomCol].getisMine() && !(randomRow == safeRow && randomCol == safeCol)) {
+                board[randomRow][randomCol].setMine(true);
+                validPos = true;
+            }
         }
     }
 
@@ -186,6 +192,7 @@ int main() {
     int width = colCount*32;
     int height = rowCount*32 + 100;
     int tileCount = colCount * rowCount;
+    std::cout << tileCount << std::endl;
     int flags = mineCount;
     sf::Font font;
     if (!font.loadFromFile("files/font.ttf")) {
@@ -483,11 +490,36 @@ int main() {
                                 addMines(board, row, col, rowCount, colCount, mineCount);
                             }
                             if (!lose && !win) {
+                                int brokentiles = 0;
                                 board[row][col].reveal();
                                 if (board[row][col].getisMine()) {
                                     lose = true;
                                     win = false;
                                     debugmode = true;
+                                } else {
+                                    for (int i = 0; i < rowCount; i++) {
+                                        for (int j = 0; j < colCount; j++) {
+                                            if (board[i][j].getisrevealed() && !board[i][j].getisMine()) {
+                                                brokentiles++;
+                                            }
+                                        }
+                                    }
+                                    std::cout << brokentiles << std::endl;
+                                    if (brokentiles == tileCount - mineCount) {
+                                        std::cout << tileCount - mineCount << std::endl;
+                                        pausedDuration = clock.getElapsedTime() - pauseStartTime;
+                                        win = true;
+                                        lose = false;
+                                        leaderBoard = true;
+                                        debugmode = false;
+                                        for (int i = 0; i < rowCount; i++) {
+                                            for (int j = 0; j < colCount; j++) {
+                                                if (board[i][j].getisMine()) {
+                                                    board[i][j].toggleFlag();
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -527,7 +559,11 @@ int main() {
                         //place flag
                         if (!lose && !win) {
                             board[row][col].toggleFlag();
-                            flags--;
+                            if (board[row][col].getisflag()) {
+                                flags--;
+                            } else {
+                                flags++;
+                            }
                         }
                     }
                 }
