@@ -182,7 +182,7 @@ int main() {
     bool timestart = false;
     bool debugmode = false;
     std::string name = "";
-    int playertime;
+    int playertime = -1;
     bool cursor = false;
     int cursorpos = 0;
     std::ifstream config("files/config.cfg");
@@ -464,6 +464,7 @@ int main() {
         }
 
         std::vector<std::vector<Tile>> board = createBoard(rowCount, colCount, tilehtex);
+        addMines(board, 0, 0, rowCount, colCount, mineCount);
 
         while (gameWindow.isOpen()) {
             sf::Event event;
@@ -489,9 +490,12 @@ int main() {
                             if (!timestart) {
                                 timestart = true;
                                 clock.restart();
-                                addMines(board, row, col, rowCount, colCount, mineCount);
+                                if (!debugmode) {
+                                    board = createBoard(rowCount, colCount, tilehtex);
+                                    addMines(board, row, col, rowCount, colCount, mineCount);
+                                }
                             }
-                            if (!lose && !win) {
+                            if (!lose && !win && !board[row][col].getisflag()) {
                                 int brokentiles = 0;
                                 board[row][col].reveal();
                                 if (board[row][col].getisMine()) {
@@ -509,7 +513,10 @@ int main() {
                                     }
                                     if (brokentiles == tileCount - mineCount) {
                                         finalTime = clock.getElapsedTime() - pausedDuration;
-                                        playertime = finalTime.asSeconds();
+                                        int newtime = finalTime.asSeconds();
+                                        if (playertime == -1 || newtime < playertime) {
+                                            playertime = newtime;
+                                        }
                                         std::cout << playertime << std::endl;
                                         linenum = 1;
                                         leadersls.clear();
@@ -548,6 +555,7 @@ int main() {
                                         lose = false;
                                         leaderBoard = true;
                                         debugmode = false;
+                                        flags = 0;
                                         for (int i = 0; i < rowCount; i++) {
                                             for (int j = 0; j < colCount; j++) {
                                                 if (board[i][j].getisMine()) {
@@ -577,8 +585,10 @@ int main() {
                         if ((x < colCount*32 - 112 && x > colCount*32 - 176) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             std::cout << "Open leader board screen" << std::endl;
                             leaderBoard = true;
-                            pause = true;
-                            debugmode = false;
+                            if (!win && !lose) {
+                                pause = true;
+                                debugmode = false;
+                            }
 
                         // Happy face button
                         } else if ((x < colCount/2 * 32 + 32 && x > colCount/2 * 32 - 32) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
@@ -589,6 +599,7 @@ int main() {
                             debugmode = false;
                             pause = false;
                             board = createBoard(rowCount, colCount, tilehtex);
+                            addMines(board, 0, 0, rowCount, colCount, mineCount);
                         }
                     }
                     if (event.mouseButton.button == sf::Mouse::Right) {
@@ -598,7 +609,7 @@ int main() {
                         int row = y/32;
 
                         //place flag
-                        if (!lose && !win) {
+                        if (!lose && !win && !board[row][col].getisrevealed()) {
                             board[row][col].toggleFlag();
                             if (board[row][col].getisflag()) {
                                 flags--;
@@ -731,6 +742,9 @@ int main() {
                         if(levent.type == sf::Event::Closed) {
                             leaderBoard = false;
                             pause = false;
+                            if (lose) {
+                                debugmode = true;
+                            }
                             leaderBoardWindow.close();
                         }
                         if(levent.type == sf::Event::KeyPressed) {
@@ -738,6 +752,9 @@ int main() {
                                 std::cout << "Closing leader board screen" << std::endl;
                                 leaderBoard = false;
                                 pause = false;
+                                if (lose) {
+                                    debugmode = true;
+                                }
                                 leaderBoardWindow.close();
                             }
                         }
