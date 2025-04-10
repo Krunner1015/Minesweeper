@@ -3,6 +3,7 @@
 #include <cctype>
 #include <vector>
 #include <random>
+#include <set>
 #include <SFML/Graphics.hpp>
 
 class Tile {
@@ -107,18 +108,34 @@ std::vector<std::vector<Tile>> createBoard(int rowCount, int colCount, sf::Textu
 }
 
 void addMines(std::vector<std::vector<Tile>> &board, int safeRow, int safeCol, int rowCount, int colCount, int mineCount) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    for (int i = 0; i < rowCount; i++) {
+        for (int j = 0; j < colCount; j++) {
+            board[i][j].setMine(false);
+            board[i][j].setadjacentMines(0);
+        }
+    }
+
+    std::set<std::pair<int, int>> excluded;
+    for (int rowchange = -1; rowchange <= 1; rowchange++) {
+        for (int colchange = -1; colchange <= 1; colchange++) {
+            if (rowchange == 0 && colchange == 0) continue;
+            int newRow = safeRow + rowchange;
+            int newCol = safeCol + colchange;
+            if (newRow >= 0 && newRow < rowCount && newCol >= 0 && newCol < colCount) {
+                excluded.insert({newRow, newCol});
+            }
+        }
+    }
+
+    std::mt19937 gen(static_cast<unsigned int>(time(nullptr)));
     std::uniform_int_distribution<int> rowDist(0, rowCount-1);
     std::uniform_int_distribution<int> colDist(0, colCount-1);
-    int placed = 0;
 
-    while (placed < mineCount) {
+    for (int i = 0; i < mineCount; i++) {
         int randomRow = rowDist(gen);
         int randomCol = colDist(gen);
-        if (!board[randomRow][randomCol].getisMine()) {
+        if (excluded.count({randomRow, randomCol}) == 0 && !board[randomRow][randomCol].getisMine() && !(randomRow == safeRow && randomCol == safeCol)) {
             board[randomRow][randomCol].setMine(true);
-            placed++;
         }
     }
 
@@ -134,6 +151,12 @@ void addMines(std::vector<std::vector<Tile>> &board, int safeRow, int safeCol, i
                     }
                 }
             }
+        }
+    }
+
+    for (int row = 0; row < rowCount; row++) {
+        for (int col = 0; col < colCount; col++) {
+            board[row][col].countAdjacentMines();
         }
     }
 }
@@ -431,6 +454,7 @@ int main() {
         }
 
         std::vector<std::vector<Tile>> board = createBoard(rowCount, colCount, tilehtex);
+        addMines(board, 0, 0, rowCount, colCount, mineCount);
 
         while (gameWindow.isOpen()) {
             sf::Event event;
@@ -459,10 +483,9 @@ int main() {
                                 addMines(board, row, col, rowCount, colCount, mineCount);
                                 //break around clicked block
                                 board[row][col].reveal();
-                                std::cout << "Mines Placed" << std::endl;
+                            } else { //handle blocks being clicked after the timer started
+                                std::cout << "Hi" << std::endl;
                             }
-                            //handle blocks being clicked after the timer started
-
                         // debug button
                         } else if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             //show mines
@@ -506,7 +529,7 @@ int main() {
                 for (int row = 0; row < rowCount; row++) {
                     for (int col = 0; col < colCount; col++) {
                         if (board[row][col].getisrevealed()) {
-                            tiler.setPosition(board[row][col].getcol()*32, board[row][col].getrow()*32);
+                            tiler.setPosition(col*32, row*32);
                             gameWindow.draw(tiler);
                         } else {
                             tileh.setPosition(col*32, row*32);
@@ -519,7 +542,7 @@ int main() {
             if (!pause) {
                 pauseStartTime = clock.getElapsedTime();
                 gameWindow.draw(pausesprite);
-            } else if (pause) {
+            } else {
                 pausedDuration = clock.getElapsedTime() - pauseStartTime;
                 gameWindow.draw(play);
                 for (int row = 0; row < rowCount; row++) {
