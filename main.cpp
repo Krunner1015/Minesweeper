@@ -73,6 +73,8 @@ public:
     bool getisrevealed() {return isrevealed;}
     bool getisFlag() {return isflag;}
     int getadjacentMines() {return adjacentMines;}
+    int getrow() {return row;}
+    int getcol() {return col;}
     sf::Sprite getSprite() {return sprite;}
 };
 
@@ -89,24 +91,41 @@ void drawDigit(sf::RenderWindow &window, sf::Sprite &digits, int digit, float x,
     window.draw(digits);
 }
 
+std::vector<std::vector<Tile>> createBoard(int rowCount, int colCount, sf::Texture &texture) {
+    std::vector<std::vector<Tile>> board;
+    for (int row = 0; row < rowCount; row++) {
+        std::vector<Tile> tileRow;
+        for (int col = 0; col < colCount; col++) {
+            Tile tile(row, col);
+            tile.setPos(col*32, row*32);
+            tile.settexture(&texture);
+            tileRow.push_back(tile);
+        }
+        board.push_back(tileRow);
+    }
+    return board;
+}
+
 void addMines(std::vector<std::vector<Tile>> &board, int safeRow, int safeCol, int rowCount, int colCount, int mineCount) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> rowDist(0, rowCount-1);
     std::uniform_int_distribution<int> colDist(0, colCount-1);
+    int placed = 0;
 
-    for (int i = 0; i < mineCount; i++) {
+    while (placed < mineCount) {
         int randomRow = rowDist(gen);
         int randomCol = colDist(gen);
         if (!board[randomRow][randomCol].getisMine()) {
             board[randomRow][randomCol].setMine(true);
+            placed++;
         }
     }
 
     for (int row = 0; row < rowCount; row++) {
         for (int col = 0; col < colCount; col++) {
-            for (int rowchange = -1; rowchange < 1; rowchange++) {
-                for (int colchange = -1; colchange < 1; colchange++) {
+            for (int rowchange = -1; rowchange <= 1; rowchange++) {
+                for (int colchange = -1; colchange <= 1; colchange++) {
                     if (rowchange == 0 && colchange == 0) continue;
                     int newRow = row + rowchange;
                     int newCol = col + colchange;
@@ -129,6 +148,7 @@ int main() {
     bool lose = false;
     bool pause = false;
     bool timestart = false;
+    bool debugbutton = false;
     std::string name = "";
     bool cursor = false;
     int cursorpos = 0;
@@ -410,20 +430,11 @@ int main() {
             welcomeWindow.setMouseCursor(hand);
         }
 
-        std::vector<std::vector<Tile>> board;
-        for (int row = 0; row < height; row++) {
-            std::vector<Tile> tileRow;
-            for (int col = 0; col < width; col++) {
-                Tile tile(row, col);
-                tile.setPos(col*32, row*32);
-                tile.settexture(&tilehtex);
-                tileRow.push_back(tile);
-            }
-            board.push_back(tileRow);
-        }
+        std::vector<std::vector<Tile>> board = createBoard(rowCount, colCount, tilehtex);
 
         while (gameWindow.isOpen()) {
             sf::Event event;
+            gameWindow.clear(sf::Color::White);
             while (gameWindow.pollEvent(event)) {
                 if(event.type == sf::Event::Closed) {
                     ingame = false;
@@ -438,39 +449,69 @@ int main() {
                     if (event.mouseButton.button == sf::Mouse::Left) {
                         int x = event.mouseButton.x;
                         int y = event.mouseButton.y;
-                        int row = x/32;
-                        int col = y/32;
+                        int col = x/32;
+                        int row = y/32;
 
                         if (y < rowCount*32) {
                             if (!timestart) {
                                 timestart = true;
                                 clock.restart();
                                 addMines(board, row, col, rowCount, colCount, mineCount);
+                                //break around clicked block
+                                board[row][col].reveal();
+                                std::cout << "Mines Placed" << std::endl;
                             }
+                            //handle blocks being clicked after the timer started
+
                         // debug button
                         } else if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
-                            win = !win;
-                            flags--;
+                            //show mines
+                            debugbutton = true;
+
                         // pause button
                         } else if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             pause = !pause;
+                            debugbutton = false;
+
                         // leaderboard button
                         } else if ((x < colCount*32 - 112 && x > colCount*32 - 176) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             std::cout << "Open leader board screen" << std::endl;
                             leaderBoard = true;
                             pause = true;
+                            debugbutton = false;
+
+                        // Happy face button
+                        } else if ((x < colCount/2 * 32 + 32 && x > colCount/2 * 32 - 32) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                            timestart = false;
+                            flags = mineCount;
+                            debugbutton = false;
+                            board = createBoard(rowCount, colCount, tilehtex);
                         }
+                    }
+                    if (event.mouseButton.button == sf::Mouse::Right) {
+                        //place flag
+                        std::cout << "right clicked" << std::endl;
                     }
                 }
             }
-
-            gameWindow.clear(sf::Color::White);
 
             if (!timestart) {
                 for (int row = 0; row < rowCount; row++) {
                     for (int col = 0; col < colCount; col++) {
                         tileh.setPosition(col*32, row*32);
                         gameWindow.draw(tileh);
+                    }
+                }
+            } else {
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        if (board[row][col].getisrevealed()) {
+                            tiler.setPosition(board[row][col].getcol()*32, board[row][col].getrow()*32);
+                            gameWindow.draw(tiler);
+                        } else {
+                            tileh.setPosition(col*32, row*32);
+                            gameWindow.draw(tileh);
+                        }
                     }
                 }
             }
@@ -485,6 +526,17 @@ int main() {
                     for (int col = 0; col < colCount; col++) {
                         tiler.setPosition(col*32, row*32);
                         gameWindow.draw(tiler);
+                    }
+                }
+            }
+
+            if (debugbutton) {
+                for (int i = 0; i < rowCount; i++) {
+                    for (int j = 0; j < colCount; j++) {
+                        if (board[i][j].getisMine()) {
+                            mine.setPosition(j*32, i*32);
+                            gameWindow.draw(mine);
+                        }
                     }
                 }
             }
