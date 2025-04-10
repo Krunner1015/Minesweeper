@@ -72,7 +72,6 @@ public:
     bool getisMine() {return ismine;}
     bool getisflag() {return isflag;}
     bool getisrevealed() {return isrevealed;}
-    bool getisFlag() {return isflag;}
     int getadjacentMines() {return adjacentMines;}
     int getrow() {return row;}
     int getcol() {return col;}
@@ -512,8 +511,14 @@ int main() {
                         }
                     }
                     if (event.mouseButton.button == sf::Mouse::Right) {
+                        int x = event.mouseButton.x;
+                        int y = event.mouseButton.y;
+                        int col = x/32;
+                        int row = y/32;
+
                         //place flag
-                        std::cout << "right clicked" << std::endl;
+                        board[row][col].toggleFlag();
+                        flags--;
                     }
                 }
             }
@@ -531,9 +536,38 @@ int main() {
                         if (board[row][col].getisrevealed()) {
                             tiler.setPosition(col*32, row*32);
                             gameWindow.draw(tiler);
+                            if (board[row][col].getadjacentMines() == 1) {
+                                one.setPosition(col*32, row*32);
+                                gameWindow.draw(one);
+                            } else if (board[row][col].getadjacentMines() == 2) {
+                                two.setPosition(col*32, row*32);
+                                gameWindow.draw(two);
+                            } else if (board[row][col].getadjacentMines() == 3) {
+                                three.setPosition(col*32, row*32);
+                                gameWindow.draw(three);
+                            } else if (board[row][col].getadjacentMines() == 4) {
+                                four.setPosition(col*32, row*32);
+                                gameWindow.draw(four);
+                            } else if (board[row][col].getadjacentMines() == 5) {
+                                five.setPosition(col*32, row*32);
+                                gameWindow.draw(five);
+                            } else if (board[row][col].getadjacentMines() == 6) {
+                                six.setPosition(col*32, row*32);
+                                gameWindow.draw(six);
+                            } else if (board[row][col].getadjacentMines() == 7) {
+                                seven.setPosition(col*32, row*32);
+                                gameWindow.draw(seven);
+                            } else if (board[row][col].getadjacentMines() == 8) {
+                                eight.setPosition(col*32, row*32);
+                                gameWindow.draw(eight);
+                            }
                         } else {
                             tileh.setPosition(col*32, row*32);
                             gameWindow.draw(tileh);
+                            if (board[row][col].getisflag()) {
+                                flag.setPosition(col*32, row*32);
+                                gameWindow.draw(flag);
+                            }
                         }
                     }
                 }
