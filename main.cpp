@@ -62,8 +62,10 @@ public:
 
     int countAdjacentMines() {
         int count = 0;
-        for (Tile* tile : adjacentTiles) {
-            if (tile->getisMine()) count++;
+        if (!ismine) {
+            for (Tile* tile : adjacentTiles) {
+                if (tile->getisMine()) count++;
+            }
         }
         adjacentMines = count;
         return count;
@@ -170,7 +172,7 @@ int main() {
     bool lose = false;
     bool pause = false;
     bool timestart = false;
-    bool debugbutton = false;
+    bool debugmode = false;
     std::string name = "";
     bool cursor = false;
     int cursorpos = 0;
@@ -453,7 +455,6 @@ int main() {
         }
 
         std::vector<std::vector<Tile>> board = createBoard(rowCount, colCount, tilehtex);
-        addMines(board, 0, 0, rowCount, colCount, mineCount);
 
         while (gameWindow.isOpen()) {
             sf::Event event;
@@ -481,32 +482,40 @@ int main() {
                                 clock.restart();
                                 addMines(board, row, col, rowCount, colCount, mineCount);
                                 //break around clicked block
-                                board[row][col].reveal();
-                            } else { //handle blocks being clicked after the timer started
-                                std::cout << "Hi" << std::endl;
                             }
+                            if (!lose && !win) {
+                                board[row][col].reveal();
+                                if (board[row][col].getisMine()) {
+                                    lose = true;
+                                    win = false;
+                                    debugmode = true;
+                                }
+                            }
+
                         // debug button
                         } else if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             //show mines
-                            debugbutton = true;
+                            debugmode = !debugmode;
 
                         // pause button
                         } else if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             pause = !pause;
-                            debugbutton = false;
+                            debugmode = false;
 
                         // leaderboard button
                         } else if ((x < colCount*32 - 112 && x > colCount*32 - 176) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                             std::cout << "Open leader board screen" << std::endl;
                             leaderBoard = true;
                             pause = true;
-                            debugbutton = false;
+                            debugmode = false;
 
                         // Happy face button
                         } else if ((x < colCount/2 * 32 + 32 && x > colCount/2 * 32 - 32) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                            lose = false;
+                            win = false;
                             timestart = false;
                             flags = mineCount;
-                            debugbutton = false;
+                            debugmode = false;
                             board = createBoard(rowCount, colCount, tilehtex);
                         }
                     }
@@ -517,8 +526,10 @@ int main() {
                         int row = y/32;
 
                         //place flag
-                        board[row][col].toggleFlag();
-                        flags--;
+                        if (!lose && !win) {
+                            board[row][col].toggleFlag();
+                            flags--;
+                        }
                     }
                 }
             }
@@ -587,7 +598,7 @@ int main() {
                 }
             }
 
-            if (debugbutton) {
+            if (debugmode) {
                 for (int i = 0; i < rowCount; i++) {
                     for (int j = 0; j < colCount; j++) {
                         if (board[i][j].getisMine()) {
