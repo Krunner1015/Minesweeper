@@ -481,7 +481,6 @@ int main() {
                                 timestart = true;
                                 clock.restart();
                                 addMines(board, row, col, rowCount, colCount, mineCount);
-                                //break around clicked block
                             }
                             if (!lose && !win) {
                                 board[row][col].reveal();
