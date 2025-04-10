@@ -560,13 +560,15 @@ int main() {
                             }
                         }
                         if (!win && !lose) {
-                            // debug button
-                            if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
-                                //show mines
-                                debugmode = !debugmode;
-
-                                // pause button
-                            } else if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                            if (!pause) {
+                                // debug button
+                                if ((x < colCount*32 - 240 && x > colCount*32 - 304) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
+                                    //show mines
+                                    debugmode = !debugmode;
+                                }
+                            }
+                            // pause button
+                            if ((x < colCount*32 - 176 && x > colCount*32 - 240) && (y < 32*(rowCount+0.5) + 64 && y > 32*(rowCount+0.5))) {
                                 pause = !pause;
                                 debugmode = false;
                             }
@@ -585,6 +587,7 @@ int main() {
                             timestart = false;
                             flags = mineCount;
                             debugmode = false;
+                            pause = false;
                             board = createBoard(rowCount, colCount, tilehtex);
                         }
                     }
