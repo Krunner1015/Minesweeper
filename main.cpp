@@ -73,6 +73,8 @@ public:
 
     bool getisMine() {return ismine;}
     bool getisflag() {return isflag;}
+    void setflag() {isflag = true;}
+    void unsetflag() {isflag = false;}
     bool getisrevealed() {return isrevealed;}
     int getadjacentMines() {return adjacentMines;}
     int getrow() {return row;}
@@ -558,7 +560,7 @@ int main() {
                                         for (int i = 0; i < rowCount; i++) {
                                             for (int j = 0; j < colCount; j++) {
                                                 if (board[i][j].getisMine()) {
-                                                    board[i][j].toggleFlag();
+                                                    board[i][j].setflag();
                                                 }
                                             }
                                         }
