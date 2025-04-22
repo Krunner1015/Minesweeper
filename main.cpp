@@ -232,7 +232,7 @@ int main() {
     setText(enterName, width/2, height/2 - 75);
 
     sf::Text nameText(name + "|", font, 18);
-    nameText.setFillColor(sf::Color::White);
+    nameText.setFillColor(sf::Color::Yellow);
     nameText.setStyle(sf::Text::Bold);
     setText(nameText, width/2, height/2 - 45);
 
